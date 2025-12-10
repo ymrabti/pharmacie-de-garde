@@ -10,6 +10,9 @@ export const metadata: Metadata = {
   description: 'Découvrez nos articles sur la santé, les médicaments et les conseils de nos pharmaciens.',
 };
 
+// Dynamic rendering to avoid build-time database queries
+export const dynamic = 'force-dynamic';
+
 interface BlogPost {
   id: string;
   slug: string;
@@ -22,22 +25,27 @@ interface BlogPost {
 }
 
 async function getBlogPosts(): Promise<BlogPost[]> {
-  const posts = await prisma.blogPost.findMany({
-    where: {
-      published: true,
-    },
-    orderBy: {
-      createdAt: 'desc',
-    },
-    include: {
-      author: {
-        select: {
-          name: true,
+  try {
+    const posts = await prisma.blogPost.findMany({
+      where: {
+        isPublished: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      include: {
+        author: {
+          select: {
+            name: true,
+          },
         },
       },
-    },
-  });
-  return posts;
+    });
+    return posts;
+  } catch (error) {
+    console.error('Error fetching blog posts:', error);
+    return [];
+  }
 }
 
 export default async function BlogPage() {

@@ -1,10 +1,24 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import { Search, Filter, MapPin, List } from 'lucide-react';
 import { Header, Footer } from '@/components/layout';
-import { PharmacyCard, PharmacyMap } from '@/components/pharmacy';
+import { PharmacyCard } from '@/components/pharmacy';
 import { Button, Input } from '@/components/ui';
+
+// Dynamic import for map to avoid SSR issues with Leaflet
+const PharmacyMap = dynamic(
+  () => import('@/components/pharmacy/PharmacyMap').then((mod) => mod.PharmacyMap),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-[500px] bg-gray-100 rounded-xl animate-pulse flex items-center justify-center">
+        <span className="text-gray-500">Chargement de la carte...</span>
+      </div>
+    ),
+  }
+);
 
 interface PharmacyWithDetails {
   id: string;

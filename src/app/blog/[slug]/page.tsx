@@ -6,25 +6,33 @@ import { Header, Footer } from '@/components/layout';
 import { Card, Button } from '@/components/ui';
 import { prisma } from '@/lib/prisma';
 
+// Dynamic rendering to avoid build-time database queries
+export const dynamic = 'force-dynamic';
+
 interface Props {
   params: Promise<{ slug: string }>;
 }
 
 async function getBlogPost(slug: string) {
-  const post = await prisma.blogPost.findUnique({
-    where: {
-      slug,
-      published: true,
-    },
-    include: {
-      author: {
-        select: {
-          name: true,
+  try {
+    const post = await prisma.blogPost.findUnique({
+      where: {
+        slug,
+        isPublished: true,
+      },
+      include: {
+        author: {
+          select: {
+            name: true,
+          },
         },
       },
-    },
-  });
-  return post;
+    });
+    return post;
+  } catch (error) {
+    console.error('Error fetching blog post:', error);
+    return null;
+  }
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

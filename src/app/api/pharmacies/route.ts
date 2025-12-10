@@ -9,6 +9,7 @@ import prisma from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
 import { pharmacySchema } from '@/lib/validations';
 import { calculateDistance } from '@/lib/utils';
+import type { Prisma } from '@prisma/client';
 
 // Type for pharmacy with extras
 interface PharmacyWithExtras {
@@ -21,7 +22,7 @@ interface PharmacyWithExtras {
   email: string | null;
   latitude: number;
   longitude: number;
-  openingHours: string | null;
+  openingHours: Prisma.JsonValue;
   isOnDuty: boolean;
   averageRating: number;
   ratingCount: number;

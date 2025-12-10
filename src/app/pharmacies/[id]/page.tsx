@@ -2,6 +2,7 @@
 
 import { useState, useEffect, use, useCallback } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { 
   MapPin, 
   Phone, 
@@ -13,8 +14,21 @@ import {
   MessageSquare
 } from 'lucide-react';
 import { Header, Footer } from '@/components/layout';
-import { PharmacyMap, RatingForm, FeedbackForm } from '@/components/pharmacy';
+import { RatingForm, FeedbackForm } from '@/components/pharmacy';
 import { Button, Card, Badge, StarRating } from '@/components/ui';
+
+// Dynamic import for map to avoid SSR issues with Leaflet
+const PharmacyMap = dynamic(
+  () => import('@/components/pharmacy/PharmacyMap').then((mod) => mod.PharmacyMap),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-[300px] bg-gray-100 rounded-xl animate-pulse flex items-center justify-center">
+        <span className="text-gray-500">Chargement de la carte...</span>
+      </div>
+    ),
+  }
+);
 
 interface Rating {
   id: string;

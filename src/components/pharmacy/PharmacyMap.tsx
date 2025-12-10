@@ -4,33 +4,11 @@
  */
 'use client';
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { Navigation, Phone, Star } from 'lucide-react';
 import { Button, Badge } from '@/components/ui';
-
-// Fix for default marker icon
-const defaultIcon = L.icon({
-  iconUrl: '/marker-icon.png',
-  iconRetinaUrl: '/marker-icon-2x.png',
-  shadowUrl: '/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
-});
-
-// On-duty pharmacy marker (green)
-const onDutyIcon = L.icon({
-  iconUrl: '/marker-green.png',
-  iconRetinaUrl: '/marker-green-2x.png',
-  shadowUrl: '/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
-});
 
 interface Pharmacy {
   id: string;
@@ -74,6 +52,35 @@ export function PharmacyMap({
   const [isClient, setIsClient] = useState(false);
   const isMounted = useRef(false);
 
+  // Create icons only on client side
+  const { defaultIcon, onDutyIcon } = useMemo(() => {
+    if (typeof window === 'undefined') {
+      return { defaultIcon: undefined, onDutyIcon: undefined };
+    }
+    
+    const defaultIcon = L.icon({
+      iconUrl: '/marker-icon.png',
+      iconRetinaUrl: '/marker-icon-2x.png',
+      shadowUrl: '/marker-shadow.png',
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34],
+      shadowSize: [41, 41],
+    });
+
+    const onDutyIcon = L.icon({
+      iconUrl: '/marker-green.png',
+      iconRetinaUrl: '/marker-green-2x.png',
+      shadowUrl: '/marker-shadow.png',
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34],
+      shadowSize: [41, 41],
+    });
+    
+    return { defaultIcon, onDutyIcon };
+  }, []);
+
   useEffect(() => {
     isMounted.current = true;
     // Set client state after mount to avoid hydration issues
@@ -105,7 +112,7 @@ export function PharmacyMap({
     window.open(url, '_blank');
   };
 
-  if (!isClient) {
+  if (!isClient || !defaultIcon) {
     return (
       <div className="w-full bg-gray-100 rounded-xl flex items-center justify-center" style={{ height }}>
         <div className="text-gray-500">Chargement de la carte...</div>
