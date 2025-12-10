@@ -1,0 +1,195 @@
+// Prisma Schema for On-Duty Pharmacies Application
+// This schema defines all database models for the pharmacy management system
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// User roles enumeration
+enum Role {
+  ADMIN
+  PHARMACY
+}
+
+// Pharmacy approval status
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// User model - for admins and pharmacy owners
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String
+  name          String
+  role          Role      @default(PHARMACY)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Relations
+  pharmacy      Pharmacy?
+  blogPosts     BlogPost[]
+  
+  @@map("users")
+}
+
+// Pharmacy model - stores pharmacy information
+model Pharmacy {
+  id              String         @id @default(cuid())
+  name            String
+  address         String
+  city            String
+  district        String?
+  phone           String
+  email           String?
+  description     String?
+  
+  // GPS coordinates
+  latitude        Float
+  longitude       Float
+  
+  // Opening hours (JSON format)
+  openingHours    Json?
+  
+  // Approval status
+  status          ApprovalStatus @default(PENDING)
+  
+  // Statistics
+  viewCount       Int            @default(0)
+  
+  // Timestamps
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  
+  // Relations
+  userId          String         @unique
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dutyPeriods     DutyPeriod[]
+  ratings         Rating[]
+  feedbacks       Feedback[]
+  
+  // Invitation system
+  invitedBy       String?
+  invitedByPharmacy Pharmacy?    @relation("PharmacyInvitations", fields: [invitedBy], references: [id])
+  invitations     Pharmacy[]     @relation("PharmacyInvitations")
+  sentInvitations Invitation[]   @relation("SentInvitations")
+  
+  @@map("pharmacies")
+}
+
+// DutyPeriod model - defines when a pharmacy is on duty
+model DutyPeriod {
+  id          String    @id @default(cuid())
+  startDate   DateTime
+  endDate     DateTime
+  notes       String?
+  
+  // Timestamps
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  // Relations
+  pharmacyId  String
+  pharmacy    Pharmacy  @relation(fields: [pharmacyId], references: [id], onDelete: Cascade)
+  
+  @@map("duty_periods")
+}
+
+// Rating model - public ratings for pharmacies
+model Rating {
+  id          String    @id @default(cuid())
+  score       Int       // 1-5 stars
+  comment     String?
+  
+  // Anonymous identifier (IP hash or session)
+  anonymousId String
+  
+  // Moderation
+  isApproved  Boolean   @default(true)
+  
+  // Timestamps
+  createdAt   DateTime  @default(now())
+  
+  // Relations
+  pharmacyId  String
+  pharmacy    Pharmacy  @relation(fields: [pharmacyId], references: [id], onDelete: Cascade)
+  
+  @@unique([pharmacyId, anonymousId])
+  @@map("ratings")
+}
+
+// Feedback model - user suggestions and feedback
+model Feedback {
+  id          String    @id @default(cuid())
+  message     String
+  email       String?   // Optional contact email
+  
+  // Status
+  isRead      Boolean   @default(false)
+  isResolved  Boolean   @default(false)
+  
+  // Timestamps
+  createdAt   DateTime  @default(now())
+  
+  // Relations (optional - can be general feedback)
+  pharmacyId  String?
+  pharmacy    Pharmacy? @relation(fields: [pharmacyId], references: [id], onDelete: SetNull)
+  
+  @@map("feedbacks")
+}
+
+// BlogPost model - admin blog for SEO content
+model BlogPost {
+  id          String    @id @default(cuid())
+  title       String
+  slug        String    @unique
+  excerpt     String
+  content     String    @db.Text
+  
+  // SEO
+  metaTitle   String?
+  metaDescription String?
+  
+  // Status
+  isPublished Boolean   @default(false)
+  publishedAt DateTime?
+  
+  // Featured image
+  imageUrl    String?
+  
+  // Timestamps
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  // Relations
+  authorId    String
+  author      User      @relation(fields: [authorId], references: [id])
+  
+  @@map("blog_posts")
+}
+
+// Invitation model - pharmacy referral system
+model Invitation {
+  id          String    @id @default(cuid())
+  email       String
+  token       String    @unique
+  
+  // Status
+  isUsed      Boolean   @default(false)
+  expiresAt   DateTime
+  
+  // Timestamps
+  createdAt   DateTime  @default(now())
+  
+  // Relations
+  inviterId   String
+  inviter     Pharmacy  @relation("SentInvitations", fields: [inviterId], references: [id], onDelete: Cascade)
+  
+  @@map("invitations")
+}

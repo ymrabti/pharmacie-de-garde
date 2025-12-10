@@ -1,0 +1,89 @@
+# Docker Compose Configuration
+# On-Duty Pharmacies Application with PostgreSQL
+
+services:
+  # ==========================================
+  # Next.js Application
+  # ==========================================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pharmacie-garde-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/pharmacie_garde?schema=public
+      - NEXTAUTH_URL=http://localhost:3000
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-change-this-secret-in-production}
+      - JWT_SECRET=${JWT_SECRET:-change-this-jwt-secret-in-production}
+      - NEXT_PUBLIC_APP_URL=http://localhost:3000
+      - NEXT_PUBLIC_APP_NAME=Pharmacies de Garde
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - pharmacie-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ==========================================
+  # PostgreSQL Database
+  # ==========================================
+  db:
+    image: postgres:16-alpine
+    container_name: pharmacie-garde-db
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=pharmacie_garde
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - pharmacie-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d pharmacie_garde"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==========================================
+  # Prisma Migrate (One-time setup)
+  # ==========================================
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pharmacie-garde-migrate
+    command: npx prisma migrate deploy
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/pharmacie_garde?schema=public
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - pharmacie-network
+    restart: "no"
+
+# ==========================================
+# Volumes
+# ==========================================
+volumes:
+  postgres_data:
+    driver: local
+
+# ==========================================
+# Networks
+# ==========================================
+networks:
+  pharmacie-network:
+    driver: bridge
