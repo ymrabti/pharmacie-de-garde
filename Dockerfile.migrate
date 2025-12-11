@@ -1,0 +1,17 @@
+# Dockerfile for Prisma Migrations
+FROM node:20-alpine
+
+RUN apk add --no-cache libc6-compat
+
+WORKDIR /app
+
+# Copy package files and install dependencies
+COPY package.json package-lock.json* ./
+RUN npm ci --only=production && npm install prisma dotenv
+
+# Copy Prisma files
+COPY prisma ./prisma
+COPY prisma.config.ts ./
+
+# Run migrations
+CMD ["npx", "prisma", "migrate", "deploy"]

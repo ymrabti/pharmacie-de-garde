@@ -40,7 +40,7 @@ services:
         container_name: pharmacie-garde-db
         restart: unless-stopped
         ports:
-            - "9432:5432"
+            - "15432:5432"
         environment:
             - POSTGRES_USER=postgres
             - POSTGRES_PASSWORD=postgres
@@ -62,9 +62,8 @@ services:
     migrate:
         build:
             context: .
-            dockerfile: Dockerfile
+            dockerfile: Dockerfile.migrate
         container_name: pharmacie-garde-migrate
-        command: npx prisma migrate deploy
         environment:
             - DATABASE_URL=postgresql://postgres:postgres@db:5432/pharmacie_garde?schema=public
         depends_on:
