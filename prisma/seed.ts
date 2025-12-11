@@ -3,9 +3,17 @@
  * Seeds the database with initial data including admin user and sample pharmacies
  */
 import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
 import bcrypt from 'bcryptjs';
+import 'dotenv/config';
 
-const prisma = new PrismaClient();
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) {
+  throw new Error('DATABASE_URL is not set');
+}
+
+const adapter = new PrismaPg({ connectionString });
+const prisma = new PrismaClient({ adapter });
 
 async function main() {
   console.log('🌱 Starting database seed...');
@@ -99,38 +107,65 @@ async function main() {
   ];
 
   for (const pharmacyData of samplePharmacies) {
-    const user = await prisma.user.create({
-      data: {
-        email: `contact@${pharmacyData.name.toLowerCase().replace(/\s+/g, '-')}.fr`,
+    const email = `contact@${pharmacyData.name.toLowerCase().replace(/\s+/g, '-').replace(/'/g, '')}.fr`;
+    
+    const user = await prisma.user.upsert({
+      where: { email },
+      update: {},
+      create: {
+        email,
         password: await bcrypt.hash('Pharmacy123!', 12),
         name: `Propriétaire ${pharmacyData.name}`,
         role: 'PHARMACY',
       },
     });
 
-    await prisma.pharmacy.create({
-      data: {
-        ...pharmacyData,
-        status: 'APPROVED',
-        userId: user.id,
-      },
+    // Check if pharmacy exists for this user
+    const existingPharmacy = await prisma.pharmacy.findUnique({
+      where: { userId: user.id },
     });
+
+    if (!existingPharmacy) {
+      await prisma.pharmacy.create({
+        data: {
+          ...pharmacyData,
+          status: 'APPROVED',
+          userId: user.id,
+        },
+      });
+    }
     console.log('✅ Sample pharmacy created:', pharmacyData.name);
   }
 
   // Create sample duty periods
   const now = new Date();
-  const tomorrow = new Date(now);
-  tomorrow.setDate(tomorrow.getDate() + 1);
+  const startOfToday = new Date(now);
+  startOfToday.setHours(0, 0, 0, 0);
   
-  await prisma.dutyPeriod.create({
-    data: {
-      pharmacyId: pharmacy.id,
-      startDate: new Date(now.setHours(20, 0, 0, 0)),
-      endDate: new Date(tomorrow.setHours(8, 0, 0, 0)),
-      notes: 'Garde de nuit',
-    },
-  });
+  const nextWeek = new Date(now);
+  nextWeek.setDate(nextWeek.getDate() + 7);
+  nextWeek.setHours(23, 59, 59, 999);
+
+  // Create duty periods for all pharmacies
+  const allPharmacies = await prisma.pharmacy.findMany();
+  for (const p of allPharmacies) {
+    await prisma.dutyPeriod.upsert({
+      where: { 
+        id: `duty-${p.id}` 
+      },
+      update: {
+        startDate: startOfToday,
+        endDate: nextWeek,
+      },
+      create: {
+        id: `duty-${p.id}`,
+        pharmacyId: p.id,
+        startDate: startOfToday,
+        endDate: nextWeek,
+        notes: 'Garde de la semaine',
+      },
+    });
+  }
   console.log('✅ Sample duty period created');
 
   // Create sample blog post

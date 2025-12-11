@@ -12,13 +12,13 @@ services:
         container_name: pharmacie-garde-app
         restart: unless-stopped
         ports:
-            - "3879:3000"
+            - "3879:3328"
         environment:
             - DATABASE_URL=postgresql://postgres:postgres@db:5432/pharmacie_garde?schema=public
-            - NEXTAUTH_URL=http://localhost:3000
+            - NEXTAUTH_URL=http://localhost:3328
             - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-change-this-secret-in-production}
             - JWT_SECRET=${JWT_SECRET:-change-this-jwt-secret-in-production}
-            - NEXT_PUBLIC_APP_URL=http://localhost:3000
+            - NEXT_PUBLIC_APP_URL=http://localhost:3328
             - NEXT_PUBLIC_APP_NAME=Pharmacies de Garde
         depends_on:
             db:
@@ -26,7 +26,7 @@ services:
         networks:
             - pharmacie-network
         healthcheck:
-            test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+            test: ["CMD", "curl", "-f", "http://localhost:3328/api/health"]
             interval: 30s
             timeout: 10s
             retries: 3

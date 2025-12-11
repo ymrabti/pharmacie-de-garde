@@ -70,11 +70,11 @@ Créez un fichier `.env.local` à la racine du projet:
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/pharmacie_de_garde?schema=public"
 
 # NextAuth
-NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_URL="http://localhost:3328"
 NEXTAUTH_SECRET="votre-secret-super-securise-32-caracteres-minimum"
 
 # Application
-NEXT_PUBLIC_APP_URL="http://localhost:3000"
+NEXT_PUBLIC_APP_URL="http://localhost:3328"
 ```
 
 ### 4. Initialiser la base de données
@@ -96,7 +96,7 @@ npm run db:seed
 npm run dev
 ```
 
-Ouvrez [http://localhost:3000](http://localhost:3000) dans votre navigateur.
+Ouvrez [http://localhost:3328](http://localhost:3328) dans votre navigateur.
 
 ## 🐳 Déploiement avec Docker
 

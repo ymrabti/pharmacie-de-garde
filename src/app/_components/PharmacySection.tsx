@@ -45,26 +45,37 @@ export function PharmacySection() {
   const [viewMode, setViewMode] = useState<'map' | 'list' | 'grid'>('map');
   const [selectedPharmacy, setSelectedPharmacy] = useState<string | null>(null);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [locationFetched, setLocationFetched] = useState(false);
 
-  // Fetch pharmacies
+  // Get user location once
   useEffect(() => {
+    if (locationFetched) return;
+    
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          });
+          setLocationFetched(true);
+        },
+        () => {
+          // Location denied, continue without distance
+          setLocationFetched(true);
+        }
+      );
+    } else {
+      setLocationFetched(true);
+    }
+  }, [locationFetched]);
+
+  // Fetch pharmacies after location is fetched
+  useEffect(() => {
+    if (!locationFetched) return;
+
     const fetchPharmacies = async () => {
       try {
-        // Get user location for distance calculation
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(
-            (position) => {
-              setUserLocation({
-                lat: position.coords.latitude,
-                lng: position.coords.longitude,
-              });
-            },
-            () => {
-              // Location denied, continue without distance
-            }
-          );
-        }
-
         const params = new URLSearchParams({
           onlyOnDuty: 'true',
           ...(userLocation && {
@@ -90,7 +101,7 @@ export function PharmacySection() {
     };
 
     fetchPharmacies();
-  }, [userLocation]);
+  }, [locationFetched, userLocation]);
 
   // Handle filters
   const handleFilter = async (filters: FilterValues) => {
