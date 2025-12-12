@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import prisma from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
-import { pharmacySchema } from '@/lib/validations';
+import { pharmacyUpdateSchema } from '@/lib/validations';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -127,7 +127,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const body = await request.json();
 
     // Validate input
-    const validation = pharmacySchema.safeParse(body);
+    const validation = pharmacyUpdateSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
         { message: 'Données invalides', errors: validation.error.flatten().fieldErrors },
@@ -135,10 +135,15 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       );
     }
 
+    // Filter out undefined values to only update provided fields
+    const updateData = Object.fromEntries(
+      Object.entries(validation.data).filter(([, value]) => value !== undefined)
+    );
+
     // Update pharmacy
     const updatedPharmacy = await prisma.pharmacy.update({
       where: { id },
-      data: validation.data,
+      data: updateData,
     });
 
     return NextResponse.json({

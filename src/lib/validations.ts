@@ -25,17 +25,31 @@ export const loginSchema = z.object({
   password: z.string().min(1, 'Mot de passe requis'),
 });
 
-// Pharmacy profile schema
+// Pharmacy profile schema (for creation - all required fields)
 export const pharmacySchema = z.object({
   name: z.string().min(2, 'Le nom doit contenir au moins 2 caractères'),
   address: z.string().min(5, 'Adresse requise'),
   city: z.string().min(2, 'Ville requise'),
   district: z.string().optional(),
-  phone: z.string().min(10, 'Numéro de téléphone invalide'),
+  phone: z.string().min(8, 'Numéro de téléphone invalide'),
   email: z.string().email('Email invalide').optional().or(z.literal('')),
   description: z.string().optional(),
   latitude: z.number().min(-90).max(90),
   longitude: z.number().min(-180).max(180),
+  openingHours: z.any().optional(),
+});
+
+// Pharmacy update schema (for profile updates - partial, no lat/lng required)
+export const pharmacyUpdateSchema = z.object({
+  name: z.string().min(2, 'Le nom doit contenir au moins 2 caractères').optional(),
+  address: z.string().min(5, 'Adresse requise').optional(),
+  city: z.string().min(2, 'Ville requise').optional(),
+  district: z.string().optional(),
+  phone: z.string().min(8, 'Numéro de téléphone invalide').optional(),
+  email: z.string().email('Email invalide').optional().or(z.literal('')),
+  description: z.string().optional(),
+  latitude: z.number().min(-90).max(90).optional(),
+  longitude: z.number().min(-180).max(180).optional(),
   openingHours: z.any().optional(),
 });
 
@@ -93,6 +107,7 @@ export const searchSchema = z.object({
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type PharmacyInput = z.infer<typeof pharmacySchema>;
+export type PharmacyUpdateInput = z.infer<typeof pharmacyUpdateSchema>;
 export type DutyPeriodInput = z.infer<typeof dutyPeriodSchema>;
 export type RatingInput = z.infer<typeof ratingSchema>;
 export type FeedbackInput = z.infer<typeof feedbackSchema>;

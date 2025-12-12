@@ -1,0 +1,9 @@
+docker
+kubernetes
+CI/CD pipelines
+load balancer
+postgresql/redis/prisma
+prometheus
+grafana
+loki
+sentry
