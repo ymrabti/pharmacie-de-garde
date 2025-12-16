@@ -28,6 +28,7 @@ export default function ProfilePage() {
     const [saving, setSaving] = useState(false);
     const [success, setSuccess] = useState(false);
     const [pharmacy, setPharmacy] = useState<{ id: string } | null>(null);
+    const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
 
     const {
         register,
@@ -85,8 +86,68 @@ export default function ProfilePage() {
         fetchProfile();
     }, [session, reset]);
 
+    // Get user location for initial pharmacy creation
+    useEffect(() => {
+        if (!pharmacy && typeof window !== 'undefined' && navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    setCoords({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
+                },
+                (err) => {
+                    console.warn('Geolocation error:', err);
+                },
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        }
+    }, [pharmacy]);
+
     const onSubmit = async (data: ProfileForm) => {
-        if (!pharmacy) return;
+        // If user has no pharmacy yet, create it
+        if (!pharmacy) {
+            if (!coords) {
+                alert('Veuillez autoriser la localisation pour créer votre pharmacie.');
+                return;
+            }
+
+            setSaving(true);
+            setSuccess(false);
+
+            try {
+                const response = await fetch('/api/pharmacies', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: data.pharmacyName,
+                        address: data.address,
+                        city: data.city,
+                        district: data.district || undefined,
+                        phone: data.phone,
+                        email: session?.user?.email || undefined,
+                        description: data.description || undefined,
+                        latitude: coords.latitude,
+                        longitude: coords.longitude,
+                    }),
+                });
+
+                if (response.ok) {
+                    const resJson = await response.json();
+                    const created = resJson.pharmacy ?? resJson; // handle either shape
+                    setPharmacy({ id: created.id });
+                    setSuccess(true);
+                    // Optionally refresh session; name may change
+                    await update({ name: data.name });
+                    setTimeout(() => setSuccess(false), 3000);
+                } else {
+                    const err = await response.json().catch(() => ({}));
+                    console.error('Create pharmacy failed:', err);
+                }
+            } catch (error) {
+                console.error('Error creating pharmacy:', error);
+            } finally {
+                setSaving(false);
+            }
+            return;
+        }
 
         setSaving(true);
         setSuccess(false);

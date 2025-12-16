@@ -34,7 +34,7 @@ export default function DutyPeriodsPage() {
       const response = await fetch('/api/duty-periods');
       if (response.ok) {
         const data = await response.json();
-        setDutyPeriods(data);
+        setDutyPeriods(data.dutyPeriods || []);
       }
     } catch (error) {
       console.error('Error fetching duty periods:', error);
@@ -55,7 +55,11 @@ export default function DutyPeriodsPage() {
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          startDate: formData.startDate,
+          endDate: formData.endDate,
+          notes: formData.notes || undefined,
+        }),
       });
 
       if (response.ok) {

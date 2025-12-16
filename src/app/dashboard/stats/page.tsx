@@ -131,7 +131,7 @@ export default function StatsPage() {
               const colors = colorClasses[stat.color];
 
               return (
-                <Card key={stat.title}>
+                <Card className="p-6" key={stat.title}>
                   <div className="flex items-start justify-between">
                     <div>
                       <p className="text-sm text-gray-500">{stat.title}</p>
@@ -156,7 +156,7 @@ export default function StatsPage() {
           {/* Charts Row */}
           <div className="grid lg:grid-cols-2 gap-6">
             {/* Views Chart */}
-            <Card>
+            <Card className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-lg font-semibold">Évolution des vues</h2>
                 <BarChart3 className="h-5 w-5 text-gray-400" />
@@ -182,7 +182,7 @@ export default function StatsPage() {
             </Card>
 
             {/* Activity Summary */}
-            <Card>
+            <Card className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-lg font-semibold">Résumé d&apos;activité</h2>
                 <TrendingUp className="h-5 w-5 text-gray-400" />
@@ -225,7 +225,7 @@ export default function StatsPage() {
           </div>
 
           {/* Tips Card */}
-          <Card className="mt-6 bg-gradient-to-r from-green-50 to-blue-50">
+          <Card className="p-6 mt-6 bg-gradient-to-r from-green-50 to-blue-50">
             <div className="flex items-start gap-4">
               <div className="p-3 bg-green-100 rounded-lg">
                 <TrendingUp className="h-6 w-6 text-green-600" />

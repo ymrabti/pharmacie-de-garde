@@ -55,8 +55,8 @@ export const pharmacyUpdateSchema = z.object({
 
 // Duty period schema
 export const dutyPeriodSchema = z.object({
-  startDate: z.string().datetime().or(z.date()),
-  endDate: z.string().datetime().or(z.date()),
+  startDate: z.coerce.date(),
+  endDate: z.coerce.date(),
   notes: z.string().optional(),
 }).refine((data) => new Date(data.endDate) > new Date(data.startDate), {
   message: 'La date de fin doit être après la date de début',
