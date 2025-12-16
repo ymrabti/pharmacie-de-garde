@@ -59,23 +59,21 @@ export function PharmacyMap({
     }
     
     const defaultIcon = L.icon({
-      iconUrl: '/marker-icon.png',
-      iconRetinaUrl: '/marker-icon-2x.png',
-      shadowUrl: '/marker-shadow.png',
+      iconUrl: '/marker-icon.svg',
+      shadowUrl: '/marker-shadow.svg',
       iconSize: [25, 41],
       iconAnchor: [12, 41],
       popupAnchor: [1, -34],
-      shadowSize: [41, 41],
+      shadowSize: [41, 13],
     });
 
     const onDutyIcon = L.icon({
-      iconUrl: '/marker-green.png',
-      iconRetinaUrl: '/marker-green-2x.png',
-      shadowUrl: '/marker-shadow.png',
+      iconUrl: '/marker-green.svg',
+      shadowUrl: '/marker-shadow.svg',
       iconSize: [25, 41],
       iconAnchor: [12, 41],
       popupAnchor: [1, -34],
-      shadowSize: [41, 41],
+      shadowSize: [41, 13],
     });
     
     return { defaultIcon, onDutyIcon };
